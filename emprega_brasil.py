@@ -10,11 +10,10 @@ import os
 # Caminho para o perfil do chrome que possui o Certificado Digital
 profile_path = r"C:\\Users\\jvbra\\AppData\\Local\\Google\\Chrome\\User Data\\"
 profile_name = "Profile 3"
+path_folder_down = os.path.join(os.getcwd(), "arquivos")
 
 # Caminho dinâmico para o driver
 chromedriver_path = os.path.join(os.getcwd(), "driver", "chromedriver.exe")
-
-options = webdriver.ChromeOptions()
 
 # Define o driver a ser utilizado (tem que ser a mesma versão do chrome que estiver instalado na máquina)
 # Pede logs mais detalhados
@@ -24,22 +23,40 @@ service = Service(
     log_path='chrome.log'
 )
 
-options.add_argument(f"--user-data-dir={profile_path}")  # Pasta base do perfil
-options.add_argument(f"--profile-directory={profile_name}") # Subpasta do perfil
 
-options.add_argument("--no-sandbox") # Desativa o sandbox do Chrome (necessário em alguns ambientes restritos)
-options.add_argument("--disable-dev-shm-usage") # Previne problemas de memória compartilhada em sistemas Linux/containers
-options.add_argument("--remote-debugging-port=9222")  # Força uma porta fixa para depuração (evita conflitos aleatórios)
-options.add_argument("--disable-gpu") # Desativa aceleração por GPU (útil para prevenir crashes em máquinas virtuais)
-options.add_argument("--disable-software-rasterizer") # Desativa rasterização por software (otimização de performance)
-options.add_argument("--disable-features=VizDisplayCompositor") # Desativa feature experimental que pode causar instabilidade
-options.add_argument("--no-default-browser-check") # Ignora verificação se Chrome é navegador padrão (ganho de velocidade)
-options.add_experimental_option("excludeSwitches", ["enable-automation"])  # Esconde o aviso de automação
+prefs = {
+        "savefile.default_directory": f'{path_folder_down}',
+        "download.default_directory": f'{path_folder_down}',
+        "download.prompt_for_download": False,
+        "download.directory_upgrade": True,
+        "download.extensions_to_open": "applications/pdf",
+        "plugins.always_open_pdf_externally": True,
+        "safebrowsing.enabled": True
+    }
+
+chrome_options = webdriver.ChromeOptions()
+
+# Por enquanto o uso de um perfil específico, que possui o Certificado Digital, não faz muita diferença
+# pois o CAPTCHA está antes da confirmação do Certificado.
+chrome_options.add_argument(f"--user-data-dir={profile_path}")  # Pasta base do perfil
+chrome_options.add_argument(f"--profile-directory={profile_name}") # Subpasta do perfil
+
+chrome_options.add_experimental_option('prefs', prefs)
+chrome_options.add_experimental_option("excludeSwitches", ['enable-automation']) # Esconde o aviso de automação
+chrome_options.add_argument('--kiosk-printing') # Auxilia a salvar documentos de acordo com as prefs
+chrome_options.add_argument("--start-maximized") # Inicializa a janela do chrome já maximizada
+chrome_options.add_argument("--no-sandbox") # Desativa o sandbox do Chrome (necessário em alguns ambientes restritos)
+chrome_options.add_argument("--disable-dev-shm-usage") # Previne problemas de memória compartilhada em sistemas Linux/containers
+chrome_options.add_argument("--remote-debugging-port=9222")  # Força uma porta fixa para depuração (evita conflitos aleatórios)
+chrome_options.add_argument("--disable-gpu") # Desativa aceleração por GPU (útil para prevenir crashes em máquinas virtuais)
+chrome_options.add_argument("--disable-software-rasterizer") # Desativa rasterização por software (otimização de performance)
+chrome_options.add_argument("--disable-features=VizDisplayCompositor") # Desativa feature experimental que pode causar instabilidade
+chrome_options.add_argument("--no-default-browser-check") # Ignora verificação se Chrome é navegador padrão (ganho de velocidade)
 
 # Inicialização segura
 try:
     # Inicializa o driver usando as opções definidas
-    driver = webdriver.Chrome(service=service, options=options)
+    driver = webdriver.Chrome(service=service, options=chrome_options)
     driver.get("https://servicos.mte.gov.br/spme-v2/#/login")
     driver.maximize_window()
 
